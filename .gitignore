@@ -1,1 +1,3 @@
 node_modules
+isolate*.log
+profile_output.*

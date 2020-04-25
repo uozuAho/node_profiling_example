@@ -58,12 +58,9 @@ const index = async dir => {
   builder.field('text');
 
   const jobs = [];
-  let numFilesIndexed = 0;
 
   for (const path of allFilesUnderPath(dir)) {
     if (!shouldIndex(path)) { continue; }
-
-    numFilesIndexed++;
 
     const job = readFileAsync(path)
       .then(text => {
