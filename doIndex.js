@@ -39,32 +39,24 @@ const readFileAsync = path => {
     .then(contents => new String(contents).toString());
 };
 
-const index = async dir => {
-  trace(`indexing ${dir}`);
-
-  const builder = new lunr.Builder();
-
-  builder.pipeline.add(
-    lunr.trimmer,
-    lunr.stopWordFilter,
-    lunr.stemmer
-  );
-
-  builder.searchPipeline.add(
-    lunr.stemmer
-  );
-
-  builder.ref('path');
-  builder.field('text');
-
+/**
+ * Returns [{
+ *  file {string}:     file path
+ *  contents {string}: file contents
+ * }]
+ * 
+ * @param {string} path to get files from
+ */
+const readAllFilesUnderPath = async path => {
+  const files = [];
   const jobs = [];
 
-  for (const path of allFilesUnderPath(dir)) {
-    if (!shouldIndex(path)) { continue; }
+  for (const file of allFilesUnderPath(path)) {
+    if (!shouldIndex(file)) { continue; }
 
-    const job = readFileAsync(path)
-      .then(text => {
-        builder.add({path, text});
+    const job = readFileAsync(file)
+      .then(contents => {
+        files.push({file, contents});
       });
 
     jobs.push(job);
@@ -72,11 +64,28 @@ const index = async dir => {
 
   await Promise.all(jobs);
 
-  const lunrIndex = builder.build();
+  return files;
+}
+
+const index = async dir => {
+  trace(`indexing ${dir}`);
+
+  const files = await readAllFilesUnderPath(dir);
+
+  const lunrIndex = lunr(builder => {
+    builder.ref('file');
+    builder.field('contents');
+
+    for (const file of files) {
+      builder.add(file);
+    }
+  });
 
   trace('indexing finished');
 
   return lunrIndex;
 };
 
-index('C:\\woz\\10000-markdown-files\\1000 files');
+index('C:\\woz\\10000-markdown-files\\1000 files')
+  // just to ensure indexing actually worked
+  .then(idx => console.log(idx.search('gravely')[0]));

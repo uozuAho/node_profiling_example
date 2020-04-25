@@ -43,6 +43,14 @@ filesystem. Let's separate the two operations.
 ![first profile](./img/profile_1.png)
 
 
+## separate reading files
+
+Turns out this is very fast. It's all in builder.add. However, builder.add
+calls node.exe, where our app spends most of its time. There's no more
+information in the profiler output as to what's happening during all this time
+spent in node.
+
+
 -----------------------------------------------------------------------
 ## Reading the nodejs profiler output
 
