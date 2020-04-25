@@ -1,19 +1,25 @@
 # nodejs profiling example
 
-Example of using the built-in nodejs profiler.
+Example of using the built-in nodejs profiler. I didn't improve performance,
+but I learned some stuff.
 
 
-## What we're profiling
+## What's being profiled
 
-Building a lunr index of text files on a local filesystem. It currently takes
-about 3 seconds to index 1000 files.
+Building a full-text search index of text files on a local filesystem, using
+[lunr](https://lunrjs.com/). It currently takes about 3 seconds to index 1000
+files.
 
-Profile the app:
+
+## Profile the app
 
 > ./profile.sh
 
 This outputs a file `profile_output.txt`. See the 'Reading the nodejs profiler
 output' section below for how to interpret this file.
+
+
+## Identify and fix performance issues
 
 We can see that 81% of process time is spent in 'shared libraries', 77/81 of
 that being node.exe:
@@ -34,7 +40,7 @@ that being node.exe:
       1    0.1%          C:\WINDOWS\System32\KERNEL32.DLL
 ```
 
-Using the [online profile visualiser](https://mapbox.github.io/flamebearer/#),
+Using this [online profile visualiser](https://mapbox.github.io/flamebearer/#),
 it seems that most of the calls to node are due to builder.add, which is a
 little confusing. I think this may be due to the async readfile calling add,
 which is 'blaming' builder.add for the time spent reading files from the
@@ -43,16 +49,24 @@ filesystem. Let's separate the two operations.
 ![first profile](./img/profile_1.png)
 
 
-## separate reading files
+## Separating reading of files from building the lunr index
 
-Turns out this is very fast. It's all in builder.add. However, builder.add
-calls node.exe, where our app spends most of its time. There's no more
-information in the profiler output as to what's happening during all this time
-spent in node.
+It turns out that reading files is very fast. The majority of the app time is
+spent in builder.add. However, builder.add calls node.exe, beyond which we get
+no information.
+
+
+## todo
+
+- Is [spy-js](https://www.jetbrains.com/help/webstorm/debugging-with-spy-js.html)
+  useful? I tried it for a few minutes, and could only really get it to tell me
+  'yes, builder.add is called a lot'.
+
+- Is there a way to see more about what in node is being called? And by what?
 
 
 -----------------------------------------------------------------------
-## Reading the nodejs profiler output
+## Interpreting the nodejs profiler output
 
 The default profiler is a sampling profiler, which means it records the current
 instruction pointer at certain intervals.
@@ -74,9 +88,11 @@ instruction pointer at certain intervals.
 - I'd recommend a visual representation over this
 
 
-## Visualising profiler output
+### Visualising profiler output
 
-There are a number of tools, here's a handy online one: https://mapbox.github.io/flamebearer/#
+There are a number of tools, here's a handy online one:
+https://mapbox.github.io/flamebearer/# Drag the `profile_output.json` file into
+that site to visualise the profiler data.
 
 
 ## References
