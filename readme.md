@@ -34,10 +34,13 @@ that being node.exe:
       1    0.1%          C:\WINDOWS\System32\KERNEL32.DLL
 ```
 
-Most of the calls to node are due to builder.add, which is a little confusing.
-I think this may be due to the async readfile calling add, which is 'blaming'
-builder.add for the time spent reading files from the filesystem. Let's separate
-the two operations.
+Using the [online profile visualiser](https://mapbox.github.io/flamebearer/#),
+it seems that most of the calls to node are due to builder.add, which is a
+little confusing. I think this may be due to the async readfile calling add,
+which is 'blaming' builder.add for the time spent reading files from the
+filesystem. Let's separate the two operations.
+
+![first profile](./img/profile_1.png)
 
 
 -----------------------------------------------------------------------
